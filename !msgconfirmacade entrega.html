@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confirmação de Entrega — FIAT</title>
+  <style>
+    :root {
+      --bg:#0f1113; --panel:#16181c; --fg:#e7e9ea; --muted:#9aa0a6; --accent:#2ea043; --border:#2a2f36;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: var(--bg); color: var(--fg);
+           max-width: 820px; margin: 24px auto; padding: 0 16px; }
+    header { background:#0b0c0f; border:1px solid var(--border); border-radius:12px;
+             padding:14px 16px; display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+    header img { height: 44px; object-fit: contain; }
+    h1 { font-size: 18px; margin: 0; color: var(--fg); }
+    .panel { background: var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    .grid { display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+    .grid .full { grid-column: 1 / -1; }
+    label { font-size:12px; font-weight:600; color: var(--muted); display:block; margin-bottom:6px; }
+    input, select, textarea { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;
+                              background:#0f1317; color: var(--fg); font-size:14px; }
+    textarea { min-height: 180px; resize: vertical; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    button { padding:10px 14px; border:1px solid var(--border); border-radius:8px; background:#23262b; color: var(--fg);
+             font-weight:700; cursor:pointer; }
+    button:hover { filter: brightness(1.05); }
+    button.secondary { background:#14171a; }
+    .hint { font-size:12px; color: var(--muted); }
+    .hidden { display:none; }
+    footer { margin-top:16px; padding-top:12px; color: var(--muted); font-size:12px; text-align:right; }
+    a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="https://sanmarinofiat.com.br/wp-content/uploads/2024/12/San-Marino_branco-2048x409.png" alt="San Marino FIAT" />
+    <h1>Gerador de mensagem — Confirmação de entrega FIAT</h1>
+  </header>
+
+  <div class="panel">
+    <div class="grid">
+      <div>
+        <label for="modelo">Modelo do veículo</label>
+        <input id="modelo" type="text" placeholder="Ex.: Fastback T200" required />
+      </div>
+
+      <div>
+        <label for="cliente">Nome do cliente</label>
+        <input id="cliente" type="text" placeholder="Ex.: Jessica" required />
+      </div>
+
+      <div>
+        <label for="tratamento">Tratamento</label>
+        <select id="tratamento">
+          <option value="Sr(a).">Sr(a).</option>
+          <option value="Sra.">Sra.</option>
+          <option value="Sr.">Sr.</option>
+          <option value="">Sem tratamento</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="data">Data</label>
+        <input id="data" type="date" required />
+      </div>
+
+      <div>
+        <label for="hora">Hora</label>
+        <input id="hora" type="time" required />
+      </div>
+
+      <div>
+        <label for="loja">Loja (San Marino)</label>
+        <select id="loja" required>
+          <option value="San Marino Matriz">San Marino Matriz</option>
+          <option value="San Marino Zona Sul">San Marino Zona Sul</option>
+          <option value="San Marino Viamão">San Marino Viamão</option>
+          <option value="San Marino Gravataí">San Marino Gravataí</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="entregador">Entregador Técnico</label>
+        <select id="entregador">
+          <option value="Vitor" selected>Vitor</option>
+          <option value="João">João</option>
+          <option value="Rafael">Rafael</option>
+          <option value="outro">Outro (editar)</option>
+        </select>
+      </div>
+
+      <div id="wrapOutro" class="hidden">
+        <label for="entregadorOutro">Nome do entregador (outro)</label>
+        <input id="entregadorOutro" type="text" placeholder="Digite o nome" />
+      </div>
+
+      <div class="full">
+        <label for="mensagem">Mensagem gerada</label>
+        <textarea id="mensagem" placeholder="O texto aparecerá aqui após clicar em 'Gerar mensagem'"></textarea>
+        <div class="hint">Após gerar, copie ou abra o WhatsApp com a mensagem pronta.</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btnGerar">Gerar mensagem</button>
+      <button id="btnCopiar" class="secondary">Copiar mensagem</button>
+      <button id="btnWhats">Abrir WhatsApp com a mensagem</button>
+    </div>
+  </div>
+
+  <footer>
+    Elaborado por <strong>Edson Jaques</strong>
+  </footer>
+
+  <script>
+    const selEntregador = document.getElementById("entregador");
+    const wrapOutro = document.getElementById("wrapOutro");
+    const inputOutro = document.getElementById("entregadorOutro");
+
+    selEntregador.addEventListener("change", () => {
+      if (selEntregador.value === "outro") {
+        wrapOutro.classList.remove("hidden");
+        inputOutro.focus();
+      } else {
+        wrapOutro.classList.add("hidden");
+        inputOutro.value = "";
+      }
+    });
+
+    function formatarDataBR(valorISO) {
+      if (!valorISO) return "";
+      const [yyyy, mm, dd] = valorISO.split("-");
+      return `${dd}/${mm}`;
+    }
+
+    function gerarTexto() {
+      const modelo = document.getElementById("modelo").value.trim();
+      const cliente = document.getElementById("cliente").value.trim();
+      const tratamento = document.getElementById("tratamento").value;
+      const dataISO = document.getElementById("data").value;
+      const hora = document.getElementById("hora").value;
+      const loja = document.getElementById("loja").value;
+
+      let entregador = selEntregador.value === "outro"
+        ? inputOutro.value.trim()
+        : selEntregador.value;
+
+      if (!modelo || !cliente || !dataISO || !hora || !loja || !entregador) {
+        alert("Preencha modelo, cliente, data, hora, loja e entregador.");
+        return;
+      }
+
+      const dataBR = formatarDataBR(dataISO);
+      const horaBR = hora.slice(0,5);
+
+      const linhas = [
+        `Confirmação de entrega — FIAT ${modelo} 🚗`,
+        `Prezada ${tratamento ? tratamento + " " : ""}${cliente},`,
+        `Sua entrega está programada para ${dataBR} às ${horaBR}, na ${loja} 📍`,
+        `Técnico responsável: ${entregador} 🧑‍🔧`,
+        `Para garantir a qualidade do atendimento, contamos com sua presença no horário combinado ⏰`,
+        `Se precisar ajustar, responda neste WhatsApp que reagendamos 🔄`,
+        `Se houver veículo na troca, leve o manual e a chave reserva 📘🔑`,
+        `Para concluir, responda CONFIRMO ✅`
+      ];
+
+      document.getElementById("mensagem").value = linhas.join("\n");
+    }
+
+    function copiar() {
+      const texto = document.getElementById("mensagem").value;
+      if (!texto) { alert("Gere a mensagem antes de copiar."); return; }
+      navigator.clipboard.writeText(texto).then(
+        () => alert("Mensagem copiada."),
+        () => alert("Não foi possível copiar. Selecione e copie manualmente.")
+      );
+    }
+
+    function abrirWhats() {
+      const texto = document.getElementById("mensagem").value;
+      if (!texto) { alert("Gere a mensagem antes de abrir o WhatsApp."); return; }
+      const url = "https://wa.me/?text=" + encodeURIComponent(texto);
+      window.open(url, "_blank");
+    }
+
+    document.getElementById("btnGerar").addEventListener("click", gerarTexto);
+    document.getElementById("btnCopiar").addEventListener("click", copiar);
+    document.getElementById("btnWhats").addEventListener("click", abrirWhats);
+  </script>
+</body>
+</html>
